@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { css } from '@emotion/css';
 import { ForceGraph } from './ForceGraph';
+import { TreeGraph } from './TreeGraph';
 import { GraphControls } from './GraphControls';
 import { NodeDetailPanel } from './NodeDetailPanel';
+import { SegmentedControl } from './ui/SegmentedControl';
 import { parseTranscript } from '@/utils/data/textParsers';
 import { transcriptToKnowledgeGraph } from '@/utils/data/graphTransformers';
 import { 
@@ -14,7 +16,8 @@ import {
 } from '@/utils/persistence';
 import { 
   GraphState, 
-  GraphNode
+  GraphNode,
+  NodeType
 } from '@/types/graph';
 
 const appStyles = css`
@@ -140,6 +143,19 @@ export const KnowledgeGraphApp: React.FC = () => {
     const savedGraph = persistenceManager.loadGraph();
     return createDefaultGraphState(savedGraph || undefined);
   });
+  const [viewMode, setViewMode] = useState<'force' | 'tree'>('force');
+  const defaultRootId = useMemo(() => {
+    // Prefer main source document, else first document
+    const main = graphState.graph.nodes.find(n => n.metadata.isSourceDocument === 'true');
+    if (main) return main.id;
+    const doc = graphState.graph.nodes.find(n => n.type === NodeType.DOCUMENT);
+    return doc?.id;
+  }, [graphState.graph.nodes]);
+  const [treeRootId, setTreeRootId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!treeRootId && defaultRootId) setTreeRootId(defaultRootId);
+  }, [defaultRootId, treeRootId]);
   
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -386,6 +402,11 @@ export const KnowledgeGraphApp: React.FC = () => {
       <div className="main-content">
         <div className="toolbar">
           <h1 className="app-title">Knowledge Graph</h1>
+          <SegmentedControl
+            options={[{ label: 'Force View', value: 'force' }, { label: 'Tree View', value: 'tree' }]}
+            value={viewMode}
+            onChange={(v) => setViewMode(v as 'force' | 'tree')}
+          />
           <button 
             className="toolbar-button primary"
             onClick={() => fileInputRef.current?.click()}
@@ -409,17 +430,34 @@ export const KnowledgeGraphApp: React.FC = () => {
               <p>Upload a transcript file or drag & drop to get started</p>
             </div>
           ) : (
-            <ForceGraph
-              nodes={filteredNodes}
-              edges={filteredEdges}
-              width={typeof window !== 'undefined' ? window.innerWidth - 300 - (selectedNode ? 400 : 0) : 800}
-              height={typeof window !== 'undefined' ? window.innerHeight - 60 : 600}
-              layoutSettings={graphState.layout}
-              selectedNodeId={graphState.selectedNodeId}
-              onNodeClick={handleNodeClick}
-              onNodeHover={handleNodeHover}
-              onBackgroundClick={handleBackgroundClick}
-            />
+            viewMode === 'force' ? (
+              <ForceGraph
+                nodes={filteredNodes}
+                edges={filteredEdges}
+                width={typeof window !== 'undefined' ? window.innerWidth - 300 - (selectedNode ? 400 : 0) : 800}
+                height={typeof window !== 'undefined' ? window.innerHeight - 60 : 600}
+                layoutSettings={graphState.layout}
+                selectedNodeId={graphState.selectedNodeId}
+                onNodeClick={handleNodeClick}
+                onNodeHover={handleNodeHover}
+                onBackgroundClick={handleBackgroundClick}
+              />
+            ) : (
+              treeRootId ? (
+                <TreeGraph
+                  graph={graphState.graph}
+                  rootId={treeRootId}
+                  width={typeof window !== 'undefined' ? window.innerWidth - 300 - (selectedNode ? 400 : 0) : 800}
+                  height={typeof window !== 'undefined' ? window.innerHeight - 60 : 600}
+                  selectedNodeId={graphState.selectedNodeId}
+                  onNodeClick={handleNodeClick}
+                  onNavigateToRoot={(id) => {
+                    setTreeRootId(id);
+                    setGraphState(prev => ({ ...prev, selectedNodeId: undefined }));
+                  }}
+                />
+              ) : null
+            )
           )}
           
           <div className={`drop-zone ${isDragging ? 'active' : ''}`}>

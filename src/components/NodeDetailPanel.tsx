@@ -2,6 +2,10 @@
 
 import React, { useState } from 'react';
 import { css } from '@emotion/css';
+import * as Tabs from '@radix-ui/react-tabs';
+import * as Popover from '@radix-ui/react-popover';
+import * as Dialog from '@radix-ui/react-dialog';
+import { UISeparator } from '@/components/ui/Separator';
 import { GraphNode, GraphEdge, NodeType, EdgeType } from '@/types/graph';
 
 interface NodeDetailPanelProps {
@@ -41,6 +45,10 @@ const panelStyles = css`
     margin: 0;
   }
 
+  .header-actions { display: inline-flex; gap: 8px; align-items: center; }
+  .icon-btn { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+  .icon-btn:hover { background: #f5f5f5; }
+
   .close-button {
     background: none;
     border: none;
@@ -57,6 +65,10 @@ const panelStyles = css`
   .panel-content {
     padding: 20px;
   }
+
+  .tabs-list { display: flex; gap: 8px; border-bottom: 1px solid #eaeaea; margin-bottom: 12px; }
+  .tab-trigger { padding: 6px 10px; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab-trigger[data-state="active"] { border-bottom-color: #2196f3; color: #2196f3; }
 
   .section {
     margin-bottom: 24px;
@@ -310,147 +322,184 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
     <div className={`${panelStyles} ${isEditing ? 'edit-mode' : ''}`}>
       <div className="panel-header">
         <h2 className="panel-title">Node Details</h2>
-        <button className="close-button" onClick={onClose}>×</button>
+        <div className="header-actions">
+          <Popover.Root>
+            <Popover.Trigger className="icon-btn" aria-label="Actions">Actions ▾</Popover.Trigger>
+            <Popover.Content sideOffset={8} align="end" style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: 8, padding: 8, boxShadow: '0 4px 14px rgba(0,0,0,0.1)' }}>
+              {isEditing ? (
+                <>
+                  <button className="icon-btn" onClick={handleSave}>Save</button>
+                  <button className="icon-btn" onClick={handleCancel}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button className="icon-btn" onClick={() => setIsEditing(true)}>Edit</button>
+                  <Dialog.Root>
+                    <Dialog.Trigger className="icon-btn">Delete…</Dialog.Trigger>
+                    <Dialog.Portal>
+                      <Dialog.Overlay style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
+                      <Dialog.Content style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'white', borderRadius: 12, border: '1px solid #e0e0e0', padding: 20, minWidth: 360, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+                        <Dialog.Title style={{ margin: 0, fontWeight: 600, fontSize: 16 }}>Delete Node</Dialog.Title>
+                        <Dialog.Description style={{ marginTop: 8, fontSize: 13, color: '#555' }}>
+                          This will remove the node and all its connections. This action cannot be undone.
+                        </Dialog.Description>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+                          <Dialog.Close asChild>
+                            <button className="button">Cancel</button>
+                          </Dialog.Close>
+                          <Dialog.Close asChild>
+                            <button className="button danger" onClick={() => { onNodeDelete(node.id); onClose(); }}>Delete</button>
+                          </Dialog.Close>
+                        </div>
+                      </Dialog.Content>
+                    </Dialog.Portal>
+                  </Dialog.Root>
+                </>
+              )}
+              <Popover.Arrow width={10} height={5} style={{ fill: 'white', stroke: '#e0e0e0' }} />
+            </Popover.Content>
+          </Popover.Root>
+          <button className="close-button" onClick={onClose}>×</button>
+        </div>
       </div>
       
       <div className="panel-content">
-        {/* Node Type */}
-        <div className="section">
-          <div 
-            className="node-type-badge"
-            style={{ backgroundColor: nodeTypeColor }}
-          >
-            {formatNodeType(node.type)}
-          </div>
-        </div>
+        <Tabs.Root defaultValue="details">
+          <Tabs.List className="tabs-list">
+            <Tabs.Trigger className="tab-trigger" value="details">Details</Tabs.Trigger>
+            <Tabs.Trigger className="tab-trigger" value="relationships">Relationships ({relatedEdges.length})</Tabs.Trigger>
+          </Tabs.List>
 
-        {/* Content */}
-        <div className="section">
-          <div className="section-title">Content</div>
-          {isEditing ? (
-            <textarea
-              className="content-area"
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              rows={4}
-              autoFocus
-            />
-          ) : (
-            <div className="content-area">
-              {node.content}
+          <Tabs.Content value="details">
+            {/* Node Type */}
+            <div className="section">
+              <div 
+                className="node-type-badge"
+                style={{ backgroundColor: nodeTypeColor }}
+              >
+                {formatNodeType(node.type)}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Confidence */}
-        {confidence > 0 && (
-          <div className="section">
-            <div className="section-title">Confidence</div>
-            <div className="confidence-meter">
-              <div className="confidence-bar">
-                <div 
-                  className="confidence-fill"
-                  style={{ width: `${confidence * 100}%` }}
+            <UISeparator />
+
+            {/* Content */}
+            <div className="section">
+              <div className="section-title">Content</div>
+              {isEditing ? (
+                <textarea
+                  className="content-area"
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={4}
+                  autoFocus
                 />
-              </div>
-              <div className="confidence-value">
-                {Math.round(confidence * 100)}%
-              </div>
+              ) : (
+                <div className="content-area">
+                  {node.content}
+                </div>
+              )}
             </div>
-          </div>
-        )}
 
-        {/* Metadata */}
-        <div className="section">
-          <div className="section-title">Metadata</div>
-          <div className="metadata-grid">
-            {node.metadata.source && (
-              <div className="metadata-item">
-                <div className="metadata-label">Source</div>
-                <div className="metadata-value">{node.metadata.source}</div>
-              </div>
-            )}
-            {node.metadata.category && (
-              <div className="metadata-item">
-                <div className="metadata-label">Category</div>
-                <div className="metadata-value">{node.metadata.category}</div>
-              </div>
-            )}
-            {node.metadata.timestamp && (
-              <div className="metadata-item">
-                <div className="metadata-label">Timestamp</div>
-                <div className="metadata-value">{node.metadata.timestamp}</div>
-              </div>
-            )}
-            {node.userAdded && (
-              <div className="metadata-item">
-                <div className="metadata-label">User Added</div>
-                <div className="metadata-value">Yes</div>
-              </div>
-            )}
-          </div>
-          {node.metadata.context && (
-            <div className="metadata-item" style={{ marginTop: '12px' }}>
-              <div className="metadata-label">Context</div>
-              <div className="metadata-value">{node.metadata.context}</div>
-            </div>
-          )}
-        </div>
-
-        {/* Relationships */}
-        {relatedEdges.length > 0 && (
-          <div className="section">
-            <div className="section-title">
-              Relationships ({relatedEdges.length})
-            </div>
-            <div className="relationships-list">
-              {relatedEdges.map((edge) => {
-                const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
-                const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
-                const targetNodeId = sourceId === node.id ? targetId : sourceId;
-                const targetNode = relatedNodes.find(n => n.id === targetNodeId);
-                const isOutgoing = sourceId === node.id;
-                
-                return (
-                  <div key={edge.id} className="relationship-item">
+            {confidence > 0 && (
+              <div className="section">
+                <div className="section-title">Confidence</div>
+                <div className="confidence-meter">
+                  <div className="confidence-bar">
                     <div 
-                      className="relationship-type"
-                      style={{ backgroundColor: getEdgeTypeColor(edge.type) }}
-                    >
-                      {isOutgoing ? '' : '← '}{formatEdgeType(edge.type)}{isOutgoing ? ' →' : ''}
-                    </div>
-                    <div className="relationship-target">
-                      {targetNode ? targetNode.content : 'Unknown node'}
-                    </div>
+                      className="confidence-fill"
+                      style={{ width: `${confidence * 100}%` }}
+                    />
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                  <div className="confidence-value">
+                    {Math.round(confidence * 100)}%
+                  </div>
+                </div>
+              </div>
+            )}
 
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          {isEditing ? (
-            <>
-              <button className="button primary" onClick={handleSave}>
-                Save
-              </button>
-              <button className="button" onClick={handleCancel}>
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="button primary" onClick={() => setIsEditing(true)}>
-                Edit
-              </button>
-              <button className="button danger" onClick={handleDelete}>
-                Delete
-              </button>
-            </>
-          )}
-        </div>
+            <div className="section">
+              <div className="section-title">Metadata</div>
+              <div className="metadata-grid">
+                {node.metadata.source && (
+                  <div className="metadata-item">
+                    <div className="metadata-label">Source</div>
+                    <div className="metadata-value">{node.metadata.source}</div>
+                  </div>
+                )}
+                {node.metadata.category && (
+                  <div className="metadata-item">
+                    <div className="metadata-label">Category</div>
+                    <div className="metadata-value">{node.metadata.category}</div>
+                  </div>
+                )}
+                {node.metadata.timestamp && (
+                  <div className="metadata-item">
+                    <div className="metadata-label">Timestamp</div>
+                    <div className="metadata-value">{node.metadata.timestamp}</div>
+                  </div>
+                )}
+                {node.userAdded && (
+                  <div className="metadata-item">
+                    <div className="metadata-label">User Added</div>
+                    <div className="metadata-value">Yes</div>
+                  </div>
+                )}
+              </div>
+              {node.metadata.context && (
+                <div className="metadata-item" style={{ marginTop: '12px' }}>
+                  <div className="metadata-label">Context</div>
+                  <div className="metadata-value">{node.metadata.context}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="action-buttons">
+              {isEditing ? (
+                <>
+                  <button className="button primary" onClick={handleSave}>Save</button>
+                  <button className="button" onClick={handleCancel}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button className="button primary" onClick={() => setIsEditing(true)}>Edit</button>
+                  <button className="button danger" onClick={handleDelete}>Delete</button>
+                </>
+              )}
+            </div>
+          </Tabs.Content>
+
+          <Tabs.Content value="relationships">
+            {relatedEdges.length > 0 ? (
+              <div className="relationships-list">
+                {relatedEdges.map((edge) => {
+                  const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+                  const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+                  const targetNodeId = sourceId === node.id ? targetId : sourceId;
+                  const targetNode = relatedNodes.find(n => n.id === targetNodeId);
+                  const isOutgoing = sourceId === node.id;
+
+                  return (
+                    <div key={edge.id} className="relationship-item">
+                      <div 
+                        className="relationship-type"
+                        style={{ backgroundColor: getEdgeTypeColor(edge.type) }}
+                      >
+                        {isOutgoing ? '' : '← '}{formatEdgeType(edge.type)}{isOutgoing ? ' →' : ''}
+                      </div>
+                      <div className="relationship-target">
+                        {targetNode ? targetNode.content : 'Unknown node'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="metadata-item">No relationships.</div>
+            )}
+          </Tabs.Content>
+        </Tabs.Root>
       </div>
     </div>
   );
