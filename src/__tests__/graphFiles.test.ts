@@ -14,6 +14,11 @@ describe('getGraphFileKind', () => {
     expect(getGraphFileKind(file('graph', 'application/json'))).toBe('graph');
   });
 
+  it('trusts the extension over a conflicting MIME type', () => {
+    expect(getGraphFileKind(file('graph.json', 'text/plain'))).toBe('graph');
+    expect(getGraphFileKind(file('TALK.TXT', 'application/json'))).toBe('transcript');
+  });
+
   it('returns null for unsupported files', () => {
     expect(getGraphFileKind(file('image.png', 'image/png'))).toBeNull();
   });

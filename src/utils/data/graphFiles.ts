@@ -3,8 +3,11 @@ export type GraphFileKind = 'transcript' | 'graph';
 type FileLike = Pick<File, 'name' | 'type'>;
 
 export function getGraphFileKind(file: FileLike): GraphFileKind | null {
-  if (file.type === 'text/plain' || file.name.endsWith('.txt')) return 'transcript';
-  if (file.type === 'application/json' || file.name.endsWith('.json')) return 'graph';
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.txt')) return 'transcript';
+  if (name.endsWith('.json')) return 'graph';
+  if (file.type === 'text/plain') return 'transcript';
+  if (file.type === 'application/json') return 'graph';
   return null;
 }
 

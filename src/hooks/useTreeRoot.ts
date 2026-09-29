@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { findDefaultRootId } from '@/utils/tree/defaultRoot';
+import { useMemo, useState } from 'react';
+import { resolveTreeRootId } from '@/utils/tree/defaultRoot';
 import { GraphNode } from '@/types/graph';
 
 export function useTreeRoot(nodes: GraphNode[]) {
-  const defaultRootId = useMemo(() => findDefaultRootId(nodes), [nodes]);
-  const [treeRootId, setTreeRootId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (!treeRootId && defaultRootId) setTreeRootId(defaultRootId);
-  }, [defaultRootId, treeRootId]);
+  const [chosenRootId, setTreeRootId] = useState<string | undefined>(undefined);
+  const treeRootId = useMemo(() => resolveTreeRootId(nodes, chosenRootId), [nodes, chosenRootId]);
 
   return [treeRootId, setTreeRootId] as const;
 }

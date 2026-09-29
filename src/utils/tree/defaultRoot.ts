@@ -6,6 +6,11 @@ export function findDefaultRootId(nodes: GraphNode[]): string | undefined {
   return nodes.find(n => n.type === NodeType.DOCUMENT)?.id;
 }
 
+export function resolveTreeRootId(nodes: GraphNode[], chosenRootId: string | undefined): string | undefined {
+  if (chosenRootId && nodes.some(n => n.id === chosenRootId)) return chosenRootId;
+  return findDefaultRootId(nodes);
+}
+
 export function getRootOptions(nodes: GraphNode[]): { value: string; label: string }[] {
   return nodes
     .filter(n => n.type === NodeType.DOCUMENT || n.type === NodeType.SOURCE)
