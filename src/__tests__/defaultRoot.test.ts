@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findDefaultRootId, getRootOptions, resolveTreeRootId } from '@/utils/tree/defaultRoot';
+import { findDefaultRootId, getRootOptions, resolveTreeRootId, syncRootHistory } from '@/utils/tree/defaultRoot';
 import { GraphNode, NodeType } from '@/types/graph';
 
 const node = (id: string, type: NodeType, metadata: GraphNode['metadata'] = {}): GraphNode => ({
@@ -45,6 +45,27 @@ describe('resolveTreeRootId', () => {
 
   it('returns undefined for an empty graph', () => {
     expect(resolveTreeRootId([], 'deleted')).toBeUndefined();
+  });
+});
+
+describe('syncRootHistory', () => {
+  const nodes = [node('a', NodeType.DOCUMENT), node('b', NodeType.SOURCE)];
+
+  it('appends a new root', () => {
+    expect(syncRootHistory(['a'], 'b', nodes)).toEqual(['a', 'b']);
+  });
+
+  it('returns the same array when nothing changed', () => {
+    const history = ['a', 'b'];
+    expect(syncRootHistory(history, 'b', nodes)).toBe(history);
+  });
+
+  it('prunes roots that left the graph and collapses the resulting repeats', () => {
+    expect(syncRootHistory(['a', 'gone', 'a', 'b'], 'b', nodes)).toEqual(['a', 'b']);
+  });
+
+  it('empties when the graph was replaced and has no root', () => {
+    expect(syncRootHistory(['old1', 'old2'], undefined, [])).toEqual([]);
   });
 });
 

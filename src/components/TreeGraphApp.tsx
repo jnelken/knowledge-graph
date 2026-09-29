@@ -6,7 +6,7 @@ import { GraphAppShell } from './GraphAppShell';
 import { RootSelect } from './ui/RootSelect';
 import { useGraphState } from '@/hooks/useGraphState';
 import { useTreeRoot } from '@/hooks/useTreeRoot';
-import { getRootOptions } from '@/utils/tree/defaultRoot';
+import { getRootOptions, syncRootHistory } from '@/utils/tree/defaultRoot';
 import { getGraphViewportSize } from '@/utils/graph/graphViewport';
 
 export const TreeGraphApp: React.FC = () => {
@@ -16,10 +16,8 @@ export const TreeGraphApp: React.FC = () => {
   const [rootHistory, setRootHistory] = useState<string[]>([]);
 
   useEffect(() => {
-    if (treeRootId) {
-      setRootHistory((prev) => (prev[prev.length - 1] === treeRootId ? prev : [...prev, treeRootId]));
-    }
-  }, [treeRootId]);
+    setRootHistory((prev) => syncRootHistory(prev, treeRootId, graphState.graph.nodes));
+  }, [treeRootId, graphState.graph.nodes]);
 
   const rootOptions = useMemo(() => getRootOptions(graphState.graph.nodes), [graphState.graph.nodes]);
   const { width, height } = getGraphViewportSize(Boolean(selectedNode));
