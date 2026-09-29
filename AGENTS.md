@@ -2,7 +2,8 @@
 
 ## Project Structure & Module Organization
 - `src/app/`: Next.js App Router (entry views, layout, styles).
-- `src/components/`: React UI (e.g., `ForceGraph.tsx`, `GraphControls.tsx`).
+- `src/components/`: React UI (e.g., `ForceGraph.tsx`, `GraphControls.tsx`). `/` (`KnowledgeGraphApp`) and the `/tree` drill-down (`TreeGraphApp`) share `GraphAppShell`.
+- `src/hooks/`: shared state hooks (`useGraphState`, `useTreeRoot`).
 - `src/utils/`: Domain utilities
   - `graph/`: node/edge calculations
   - `data/`: parsers and transformers
@@ -28,10 +29,9 @@
 - **Linting**: Keep code green with `npm run lint` before pushing.
 
 ## Testing Guidelines
-- Tests are not yet configured. If adding tests:
-  - Prefer Jest/Vitest + React Testing Library.
-  - Place under `src/__tests__` and name `*.test.ts`/`*.test.tsx`.
-  - Aim for fast unit tests of utils; add component tests for critical UI.
+- `npm test` runs Vitest (`vitest.config.mts`, `@/*` alias supported).
+- Place tests under `src/__tests__` and name `*.test.ts`/`*.test.tsx`.
+- Aim for fast unit tests of utils; add React Testing Library component tests for critical UI.
 
 ## Commit & Pull Request Guidelines
 - **Commits**: Imperative, concise subject; scope if helpful (e.g., `components:`). Example: `utils: add edge weight calculation`.

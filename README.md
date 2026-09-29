@@ -22,7 +22,12 @@ src/
 │   ├── ForceGraph.tsx     # D3.js graph visualization
 │   ├── GraphControls.tsx  # Filter and layout controls
 │   ├── NodeDetailPanel.tsx # Node editing and details
-│   └── KnowledgeGraphApp.tsx # Main application
+│   ├── GraphAppShell.tsx  # Shared layout, toolbar, upload, detail panel
+│   ├── KnowledgeGraphApp.tsx # Main application (/)
+│   └── TreeGraphApp.tsx   # Tree drill-down view (/tree)
+├── hooks/                  # Shared state hooks
+│   ├── useGraphState.ts   # Graph state, selection, persistence, file loading
+│   └── useTreeRoot.ts     # Tree root selection with default fallback
 ├── constants/              # Configuration and default values
 │   ├── graphDefaults.ts   # Visual constants, colors, sizes
 │   ├── nodeTypes.ts       # Node type labels and configurations
@@ -32,10 +37,16 @@ src/
 └── utils/                 # Utility functions organized by domain
     ├── graph/             # Graph-specific calculations
     │   ├── nodeCalculations.ts # Node sizing, positioning, styling
-    │   └── edgeCalculations.ts # Edge styling, connections, validation
+    │   ├── edgeCalculations.ts # Edge styling, connections, validation
+    │   ├── graphFilter.ts # Apply the sidebar filter to nodes and edges
+    │   └── graphViewport.ts # Graph canvas size from window and panels
     ├── data/              # Data processing and transformation
     │   ├── textParsers.ts # Parse transcripts into structured data
-    │   └── graphTransformers.ts # Convert between data formats
+    │   ├── graphTransformers.ts # Convert between data formats
+    │   └── graphFiles.ts  # Classify uploaded/dropped .txt and .json files
+    ├── tree/              # Tree view helpers
+    │   ├── buildTree.ts   # Build a tree from a graph root
+    │   └── defaultRoot.ts # Default root, root options, Back history
     ├── validation/        # Data validation utilities
     │   ├── nodeValidation.ts # Validate node structure and content
     │   └── edgeValidation.ts # Validate edge connections and properties
@@ -99,6 +110,7 @@ src/
 npm run dev    # Start development server at http://localhost:3000
 npm run build  # Build production version
 npm run lint   # Run ESLint
+npm test       # Run Vitest unit tests
 ```
 
 ### Usage
