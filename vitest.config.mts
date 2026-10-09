@@ -7,7 +7,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  // tsconfig's `jsx: preserve` belongs to Next.js; tests need JSX compiled.
+  esbuild: {
+    jsx: 'automatic'
+  },
   test: {
-    include: ['src/**/*.test.ts']
+    environment: 'jsdom',
+    include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['./vitest.setup.ts']
   }
 });
