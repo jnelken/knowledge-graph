@@ -10,13 +10,21 @@ export interface NodeDraft {
   cancel: () => void;
 }
 
-// The draft is seeded once on mount; callers that switch nodes without a remount keep the old draft.
+// Switching to a different node discards any unsaved draft so it can never be saved onto the new node.
 export const useNodeDraft = (
   node: GraphNode | null,
   onNodeUpdate: (nodeId: string, updates: Partial<GraphNode>) => void
 ): NodeDraft => {
+  const nodeId = node?.id ?? null;
+  const [draftNodeId, setDraftNodeId] = useState(nodeId);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(node?.content || '');
+
+  if (draftNodeId !== nodeId) {
+    setDraftNodeId(nodeId);
+    setIsEditing(false);
+    setEditContent(node?.content || '');
+  }
 
   const save = () => {
     if (!node) return;

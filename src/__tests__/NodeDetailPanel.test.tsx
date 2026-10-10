@@ -201,16 +201,42 @@ describe('NodeDetailPanel edit mode', () => {
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('Original');
   });
 
-  it('keeps the first node\'s draft when the node prop changes without a remount', () => {
+  it('drafts the newly selected node when the node prop changes without a remount', () => {
     const { rerender, props } = renderPanel({ node: node('n1', { content: 'First' }) });
     rerender(<NodeDetailPanel {...props} node={node('n2', { content: 'Second' })} />);
     expect(screen.getByText('Second')).toBeTruthy();
 
     fireEvent.click(panelButtons().getByRole('button', { name: 'Edit' }));
-    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('First');
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('Second');
 
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Second revised' } });
     fireEvent.click(panelButtons().getByRole('button', { name: 'Save' }));
-    expect(props.onNodeUpdate).toHaveBeenCalledWith('n2', { content: 'First' });
+    expect(props.onNodeUpdate).toHaveBeenCalledTimes(1);
+    expect(props.onNodeUpdate).toHaveBeenCalledWith('n2', { content: 'Second revised' });
+  });
+
+  it('discards an unsaved draft and leaves edit mode when another node is selected', () => {
+    const { rerender, props } = renderPanel({ node: node('n1', { content: 'First' }) });
+    fireEvent.click(panelButtons().getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Unsaved first draft' } });
+
+    rerender(<NodeDetailPanel {...props} node={node('n2', { content: 'Second' })} />);
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByText('Second')).toBeTruthy();
+
+    fireEvent.click(panelButtons().getByRole('button', { name: 'Edit' }));
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('Second');
+    fireEvent.click(panelButtons().getByRole('button', { name: 'Save' }));
+    expect(props.onNodeUpdate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the draft when the same node rerenders with updated fields', () => {
+    const { rerender, props } = renderPanel({ node: node('n1', { content: 'First' }) });
+    fireEvent.click(panelButtons().getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'In progress' } });
+
+    rerender(<NodeDetailPanel {...props} node={node('n1', { content: 'First', metadata: { credibility: 0.5 } })} />);
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('In progress');
   });
 });
 
