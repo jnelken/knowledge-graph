@@ -117,6 +117,7 @@ describe('generateEdgeValidationReport', () => {
     ]);
   });
 
+  // Known bug pinned as-is until DEV-198 fixes it.
   it('reports out-of-range numbers as valid (quirk: only missing or non-numeric values are errors)', () => {
     expect(generateEdgeValidationReport(edge({ strength: 1.5 }))).toEqual({ isValid: true, errors: [], warnings: [] });
   });

@@ -71,6 +71,7 @@ describe('transcriptToKnowledgeGraph', () => {
     expect(byId['statement-1-to-entity-location-1'].confidence).toBe(0.3);
   });
 
+  // Known bug pinned as-is until DEV-197 fixes it.
   it('falls back to the edge type default confidence when confidence is 0', () => {
     const graph = transcriptToKnowledgeGraph(transcript({
       entities: [{ text: 'Alice', type: NodeType.PERSON, mentions: [mention], confidence: 0 }],
