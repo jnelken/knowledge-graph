@@ -178,9 +178,13 @@ export function generateEdgeValidationReport(
     }
     if (edgeObj?.strength === undefined || typeof edgeObj.strength !== 'number') {
       errors.push('Missing or invalid edge strength');
+    } else if (edgeObj.strength < 0 || edgeObj.strength > 1) {
+      errors.push('Edge strength must be between 0 and 1');
     }
     if (edgeObj?.confidence === undefined || typeof edgeObj.confidence !== 'number') {
       errors.push('Missing or invalid edge confidence');
+    } else if (edgeObj.confidence < 0 || edgeObj.confidence > 1) {
+      errors.push('Edge confidence must be between 0 and 1');
     }
   }
 

@@ -117,9 +117,31 @@ describe('generateEdgeValidationReport', () => {
     ]);
   });
 
-  // Known bug pinned as-is until DEV-198 fixes it.
-  it('reports out-of-range numbers as valid (quirk: only missing or non-numeric values are errors)', () => {
-    expect(generateEdgeValidationReport(edge({ strength: 1.5 }))).toEqual({ isValid: true, errors: [], warnings: [] });
+  it.each([
+    ['strength above 1', { strength: 1.5 }, 'Edge strength must be between 0 and 1'],
+    ['negative strength', { strength: -0.1 }, 'Edge strength must be between 0 and 1'],
+    ['confidence above 1', { confidence: 1.01 }, 'Edge confidence must be between 0 and 1'],
+    ['negative confidence', { confidence: -2 }, 'Edge confidence must be between 0 and 1']
+  ])('reports %s as a range error', (_, overrides, message) => {
+    const report = generateEdgeValidationReport(edge(overrides));
+    expect(report.isValid).toBe(false);
+    expect(report.errors).toEqual([message]);
+  });
+
+  it('reports both range errors together', () => {
+    expect(generateEdgeValidationReport(edge({ strength: 2, confidence: 3 })).errors).toEqual([
+      'Edge strength must be between 0 and 1',
+      'Edge confidence must be between 0 and 1'
+    ]);
+  });
+
+  it('accepts the 0 and 1 bounds', () => {
+    expect(generateEdgeValidationReport(edge({ strength: 1, confidence: 1 }))).toEqual({
+      isValid: true,
+      errors: [],
+      warnings: []
+    });
+    expect(generateEdgeValidationReport(edge({ strength: 0, confidence: 0 })).isValid).toBe(true);
   });
 
   it('flags missing nodes and bad metadata as errors', () => {
