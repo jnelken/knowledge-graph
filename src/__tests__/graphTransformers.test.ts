@@ -71,13 +71,18 @@ describe('transcriptToKnowledgeGraph', () => {
     expect(byId['statement-1-to-entity-location-1'].confidence).toBe(0.3);
   });
 
-  // Known bug pinned as-is until DEV-197 fixes it.
-  it('falls back to the edge type default confidence when confidence is 0', () => {
+  it('preserves an explicit 0 confidence on source-to-entity, source-to-statement, and statement-to-entity edges', () => {
     const graph = transcriptToKnowledgeGraph(transcript({
       entities: [{ text: 'Alice', type: NodeType.PERSON, mentions: [mention], confidence: 0 }],
-      statements: []
+      statements: [
+        { text: 'Alice said hello', context: 'intro', confidence: 0, type: 'claim' }
+      ]
     }));
-    expect(graph.edges[0].confidence).toBe(0.6);
+    const byId = Object.fromEntries(graph.edges.map(e => [e.id, e]));
+
+    expect(byId['source-to-entity-person-0'].confidence).toBe(0);
+    expect(byId['source-to-statement-0'].confidence).toBe(0);
+    expect(byId['statement-0-to-entity-person-0'].confidence).toBe(0);
   });
 
   it('never links an entity that has no mentions', () => {
