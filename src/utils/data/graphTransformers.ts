@@ -123,7 +123,7 @@ function createEdge(
     target: targetId,
     type,
     strength: getDefaultEdgeStrength(type),
-    confidence: confidence || getDefaultEdgeConfidence(type)
+    confidence: confidence ?? getDefaultEdgeConfidence(type)
   };
 }
 
