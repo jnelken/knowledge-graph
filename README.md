@@ -21,7 +21,10 @@ src/
 ├── components/             # React UI components
 │   ├── ForceGraph.tsx     # D3.js graph visualization
 │   ├── GraphControls.tsx  # Filter and layout controls
+│   ├── graphControls/     # Extracted GraphControls sections
+│   │   └── LayoutControls.tsx # Force-layout strength/distance/charge sliders
 │   ├── NodeDetailPanel.tsx # Node editing and details
+│   ├── nodeDetail/        # Extracted NodeDetailPanel sections
 │   ├── GraphAppShell.tsx  # Shared layout, toolbar, upload, detail panel
 │   ├── KnowledgeGraphApp.tsx # Main application (/)
 │   └── TreeGraphApp.tsx   # Tree drill-down view (/tree)
